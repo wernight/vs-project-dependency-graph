@@ -4,3 +4,15 @@ obj
 
 # mstest test results
 TestResults
+
+# General for Visual Studio solution files
+*.user
+*.suo
+
+# ReSharper
+_ReSharper.*
+
+# NCrunch
+*.ncrunchsolution
+*.ncrunchproject
+*.crunchsolution.cache
