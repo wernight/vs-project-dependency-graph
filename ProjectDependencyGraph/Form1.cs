@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using Clifton.Collections.Generic;
@@ -248,7 +249,12 @@ namespace ProjectDependencyGraph
 
         private void btnRender_Click(object sender, EventArgs e)
         {
-            string digraph = GenerateDigraph();
+            // Generate the digraph.
+            bool simplified =
+                MessageBox.Show("Render the simplified version skipping implied dependencies?", "Simplified graph?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                DialogResult.Yes;
+
+            string digraph = GenerateDigraph(simplified);
 
             Clipboard.SetText(digraph);
 
@@ -276,31 +282,49 @@ namespace ProjectDependencyGraph
                 MessageBox.Show(
                     "GraphViz doesn't seem to be installed on your local machine under the expected folder: " +
                     Environment.NewLine + graphvizDir + Environment.NewLine + Environment.NewLine +
-                    "The GraphViz source code has been copied to your clipboard.");
+                    "The GraphViz source code has been copied to your clipboard. You may go to http://graphviz-dev.appspot.com/ to render it there.");
             }
         }
 
         /// <summary>
         /// Generate the digraph code.
         /// </summary>
+        /// <param name="simplified">True to remove implied references: If A depends on B and C, and B also depends on C (directly or indirectly), then don't display the dependency of A on C.</param>
         /// <returns></returns>
-        private string GenerateDigraph()
+        private string GenerateDigraph(bool simplified = false)
         {
             var sb = new StringBuilder();
             sb.AppendLine("digraph G {");
 
             foreach (Project p in _projects)
             {
-                if (p.ReferencedProjects.Count == 0)
+                sb.AppendFormat("  {0}", p.Name.Quote());
+                if (p.OutputType != "Library")
+                    sb.Append(" [style=filled]");
+                sb.AppendLine(";");
+            }
+
+            foreach (Project p in _projects)
+            {
+                foreach (var r in p.ReferencedProjects.Keys)
                 {
-                    sb.AppendFormat("  {0};", p.Name.Quote());
-                }
-                else
-                    foreach (var r in p.ReferencedProjects.Keys)
+                    if (simplified)
                     {
-                        sb.AppendFormat("  {0} -> {1};", p.Name.Quote(), r.Quote());
+                        // Given that 'p' depends on 'r', look if there is another dependency that depends
+                        // directly or indirectly on 'r' too.
+                        Project refProject;
+                        if (_projectMap.TryGetValue(r, out refProject))
+                        {
+                            // Skip this referenced project.
+                            if (p.Dependencies.Any(
+                                dependency => dependency != refProject && dependency.References(refProject)))
+                                continue;
+                        }
                     }
-                sb.AppendLine();
+
+                    sb.AppendFormat("  {0} -> {1};", p.Name.Quote(), r.Quote());
+                    sb.AppendLine();
+                }
             }
 
             sb.AppendLine("}");
