@@ -8,13 +8,10 @@ namespace ProjectDependencyGraph
 {
     public class Project : IComparable<Project>
     {
-        private readonly List<Project> _dependencies;
-        private readonly Dictionary<string, string> _referencedProjects;
-
         public Project()
         {
-            _referencedProjects = new Dictionary<string, string>();
-            _dependencies = new List<Project>();
+            ReferencedProjects = new Dictionary<string, string>();
+            Dependencies = new List<Project>();
             TargetVersion = "v2.0"; // I assume this is the default.
         }
 
@@ -22,15 +19,12 @@ namespace ProjectDependencyGraph
         public string TargetVersion { get; set; }
         public Guid Guid { get; set; }
 
-        public Dictionary<string, string> ReferencedProjects
-        {
-            get { return _referencedProjects; }
-        }
+        /// <summary>
+        /// Dictionary of key the project name and value the project path.
+        /// </summary>
+        public Dictionary<String, String> ReferencedProjects { get; private set; }
 
-        public List<Project> Dependencies
-        {
-            get { return _dependencies; }
-        }
+        public List<Project> Dependencies { get; private set; }
 
         #region IComparable<Project> Members
 
@@ -73,7 +67,7 @@ namespace ProjectDependencyGraph
                                         })
             {
                 string projPath = Path.Combine(Path.GetDirectoryName(filename), projRef.Path);
-                _referencedProjects.Add(projRef.Name, projPath);
+                ReferencedProjects.Add(projRef.Name, projPath);
             }
         }
     }

@@ -248,26 +248,9 @@ namespace ProjectDependencyGraph
 
         private void btnRender_Click(object sender, EventArgs e)
         {
-            // Generate the digraph code.
-            var sb = new StringBuilder();
-            sb.AppendLine("digraph G {");
+            string digraph = GenerateDigraph();
 
-            foreach (Project p in _projects)
-            {
-                if (p.ReferencedProjects.Count == 0)
-                {
-                    sb.AppendFormat("  {0};{1}", p.Name.Quote(), Environment.NewLine);
-                }
-                else
-                    foreach (var r in p.ReferencedProjects)
-                    {
-                        sb.AppendFormat("  {0} -> {1};{2}", p.Name.Quote(), r.Key.Quote(), Environment.NewLine);
-                    }
-            }
-
-            sb.AppendLine("}");
-
-            Clipboard.SetText(sb.ToString());
+            Clipboard.SetText(digraph);
 
             // Find GraphViz
             string graphvizDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Graphviz2.22\bin");
@@ -275,7 +258,7 @@ namespace ProjectDependencyGraph
             {
                 // Dotty
                 string filename = Path.GetTempFileName() + ".dot";
-                File.WriteAllText(filename, sb.ToString());
+                File.WriteAllText(filename, digraph);
 
                 ExecuteWait(Path.Combine(graphvizDir, "dotty.exe"), filename);
 
@@ -295,6 +278,33 @@ namespace ProjectDependencyGraph
                     Environment.NewLine + graphvizDir + Environment.NewLine + Environment.NewLine +
                     "The GraphViz source code has been copied to your clipboard.");
             }
+        }
+
+        /// <summary>
+        /// Generate the digraph code.
+        /// </summary>
+        /// <returns></returns>
+        private string GenerateDigraph()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("digraph G {");
+
+            foreach (Project p in _projects)
+            {
+                if (p.ReferencedProjects.Count == 0)
+                {
+                    sb.AppendFormat("  {0};", p.Name.Quote());
+                }
+                else
+                    foreach (var r in p.ReferencedProjects.Keys)
+                    {
+                        sb.AppendFormat("  {0} -> {1};", p.Name.Quote(), r.Quote());
+                    }
+                sb.AppendLine();
+            }
+
+            sb.AppendLine("}");
+            return sb.ToString();
         }
 
         private static void ExecuteWait(string fileName, string arguments)
