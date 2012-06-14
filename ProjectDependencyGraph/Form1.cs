@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading;
 using System.Windows.Forms;
 using Clifton.Collections.Generic;
 using Clifton.Tools.Strings;
@@ -249,6 +248,7 @@ namespace ProjectDependencyGraph
 
         private void btnRender_Click(object sender, EventArgs e)
         {
+            // Generate the digraph code.
             var sb = new StringBuilder();
             sb.AppendLine("digraph G {");
 
@@ -267,30 +267,44 @@ namespace ProjectDependencyGraph
 
             sb.AppendLine("}");
 
-            string filename = Path.GetTempFileName() + ".dot";
-            File.WriteAllText(filename, sb.ToString());
-
-            string progFilePath = Environment.GetEnvironmentVariable("ProgramFiles");
-            string progFilex86 = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
-
-            if (progFilex86 != null)
-            {
-                progFilePath = progFilex86;
-            }
-
-            Process.Start(progFilePath + @"\Graphviz2.22\bin\dotty.exe", filename);
-
-            File.Delete(@"c:\temp\graph.png");
-            Process pr = Process.Start(progFilePath + @"\Graphviz2.22\bin\dot.exe",
-                                       "-Tpng " + filename + @" -o c:\temp\graph.png");
-
-            while (!pr.HasExited)
-            {
-                Thread.Sleep(100);
-            }
-
-            Process.Start(@"c:\temp\graph.png");
             Clipboard.SetText(sb.ToString());
+
+            // Find GraphViz
+            string graphvizDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Graphviz2.22\bin");
+            if (Directory.Exists(graphvizDir))
+            {
+                // Dotty
+                string filename = Path.GetTempFileName() + ".dot";
+                File.WriteAllText(filename, sb.ToString());
+
+                ExecuteWait(Path.Combine(graphvizDir, "dotty.exe"), filename);
+
+                // Dot
+                string outputImagePath = Path.Combine(Path.GetTempPath(), "ProjectDependencyGraph.png");
+                if (File.Exists(outputImagePath))
+                    File.Delete(outputImagePath);
+
+                // Show the result with the default editor.
+                ExecuteWait(Path.Combine(graphvizDir, "dot.exe"), "-Tpng " + filename + " -o " + outputImagePath);
+                Process.Start(outputImagePath);
+            }
+            else
+            {
+                MessageBox.Show(
+                    "GraphViz doesn't seem to be installed on your local machine under the expected folder: " +
+                    Environment.NewLine + graphvizDir + Environment.NewLine + Environment.NewLine +
+                    "The GraphViz source code has been copied to your clipboard.");
+            }
+        }
+
+        private static void ExecuteWait(string fileName, string arguments)
+        {
+            using (Process process = Process.Start(fileName, arguments))
+            {
+                if (process == null)
+                    throw new Exception("Failed to create a new process for: " + fileName);
+                process.WaitForExit();
+            }
         }
     }
 }
