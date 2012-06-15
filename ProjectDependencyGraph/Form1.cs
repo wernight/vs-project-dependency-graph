@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows.Forms;
 using Clifton.Collections.Generic;
 using Clifton.Tools.Strings;
+using ProjectDependencyGraph.Properties;
 
 namespace ProjectDependencyGraph
 {
@@ -16,6 +17,7 @@ namespace ProjectDependencyGraph
         private List<string> _errors;
         private DiagnosticDictionary<string, Project> _projectMap;
         private List<Project> _projects;
+        private string _graphvizDir;
 
         public Form1()
         {
@@ -184,7 +186,7 @@ namespace ProjectDependencyGraph
         {
             var ofd = new OpenFileDialog
                 {
-                    Filter = "sln files (*.sln)|*.sln",
+                    Filter = "Visual Studio Solution Files (*.sln)|*.sln",
                     RestoreDirectory = true
                 };
             DialogResult res = ofd.ShowDialog();
@@ -251,7 +253,7 @@ namespace ProjectDependencyGraph
         {
             // Generate the digraph.
             bool simplified =
-                MessageBox.Show("Render the simplified version skipping implied dependencies?", "Simplified graph?", MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
+                MessageBox.Show(Resources.RenderSimplifiedDependencyGraphQuestion, Resources.RenderGraphMessageBoxTitle, MessageBoxButtons.YesNo, MessageBoxIcon.Question) ==
                 DialogResult.Yes;
 
             string digraph = GenerateDigraph(simplified);
@@ -259,31 +261,69 @@ namespace ProjectDependencyGraph
             Clipboard.SetText(digraph);
 
             // Find GraphViz
-            string graphvizDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Graphviz2.22\bin");
-            if (Directory.Exists(graphvizDir))
+            if (_graphvizDir == null)
             {
-                // Dotty
-                string filename = Path.GetTempFileName() + ".dot";
-                File.WriteAllText(filename, digraph);
+                var fullPath = LocateInPath("dotty.exe");
+                if (fullPath != null)
+                {
+                    _graphvizDir = Path.GetDirectoryName(fullPath);
+                }
+                else
+                {
+                    var dialogResult = MessageBox.Show(Resources.LocateGraphVizQuetion, Resources.RenderGraphMessageBoxTitle,
+                                                       MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (dialogResult == DialogResult.Yes)
+                    {
+                        using (var folderBrowserDialog = new FolderBrowserDialog()
+                            {
+                                Description = Resources.LocateGraphViz,
+                                ShowNewFolderButton = false
+                            })
+                        {
+                            if (folderBrowserDialog.ShowDialog() == DialogResult.OK)
+                                _graphvizDir = folderBrowserDialog.SelectedPath;
+                        }
+                    }
+                }
 
-                ExecuteWait(Path.Combine(graphvizDir, "dotty.exe"), filename);
+                if (_graphvizDir == null)
+                    _graphvizDir = "";
+            }
+
+            if (Directory.Exists(_graphvizDir))
+            {
+                var tempFileName = Path.GetTempFileName();
+
+                // Dotty
+                string filename = tempFileName + ".dot";
+                File.WriteAllText(filename, digraph);
+                ExecuteWait(Path.Combine(_graphvizDir, "dotty.exe"), filename);
 
                 // Dot
-                string outputImagePath = Path.Combine(Path.GetTempPath(), "ProjectDependencyGraph.png");
+                string outputImagePath = tempFileName + ".png";
                 if (File.Exists(outputImagePath))
                     File.Delete(outputImagePath);
+                ExecuteWait(Path.Combine(_graphvizDir, "dot.exe"), "-Tpng " + filename + " -o " + outputImagePath);
 
                 // Show the result with the default editor.
-                ExecuteWait(Path.Combine(graphvizDir, "dot.exe"), "-Tpng " + filename + " -o " + outputImagePath);
+                MessageBox.Show(Resources.DigraphCopiedToClipboard);
                 Process.Start(outputImagePath);
             }
             else
             {
-                MessageBox.Show(
-                    "GraphViz doesn't seem to be installed on your local machine under the expected folder: " +
-                    Environment.NewLine + graphvizDir + Environment.NewLine + Environment.NewLine +
-                    "The GraphViz source code has been copied to your clipboard. You may go to http://graphviz-dev.appspot.com/ to render it there.");
+                MessageBox.Show(Resources.DigraphCopiedToClipboardByGraphVizNotFound);
             }
+        }
+
+        private static string LocateInPath(string fileName)
+        {
+            if (File.Exists(fileName))
+                return Path.GetFullPath(fileName);
+
+            var values = Environment.GetEnvironmentVariable("PATH");
+            if (values == null)
+                return null;
+            return values.Split(';').Select(path => Path.Combine(path, fileName)).FirstOrDefault(File.Exists);
         }
 
         /// <summary>
@@ -317,7 +357,7 @@ namespace ProjectDependencyGraph
                         {
                             // Skip this referenced project.
                             if (p.Dependencies.Any(
-                                dependency => dependency != refProject && dependency.References(refProject)))
+                                dependency => !Equals(dependency, refProject) && dependency.References(refProject)))
                                 continue;
                         }
                     }

@@ -59,5 +59,59 @@ namespace ProjectDependencyGraph.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The digraph code has been copied to your clipboard..
+        /// </summary>
+        internal static string DigraphCopiedToClipboard {
+            get {
+                return ResourceManager.GetString("DigraphCopiedToClipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphViz couldn&apos;t be found on your machine. The digraph code has been copied to your clipboard. You may go to http://graphviz-dev.appspot.com/ to render it there..
+        /// </summary>
+        internal static string DigraphCopiedToClipboardByGraphVizNotFound {
+            get {
+                return ResourceManager.GetString("DigraphCopiedToClipboardByGraphVizNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the folder containing &apos;dotty.exe&apos; and &apos;dot.exe&apos;. Usually in your Program Files under GraphViz bin..
+        /// </summary>
+        internal static string LocateGraphViz {
+            get {
+                return ResourceManager.GetString("LocateGraphViz", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GraphViz wasn&apos;t found. Would you like to locate it?.
+        /// </summary>
+        internal static string LocateGraphVizQuetion {
+            get {
+                return ResourceManager.GetString("LocateGraphVizQuetion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dependency Graph.
+        /// </summary>
+        internal static string RenderGraphMessageBoxTitle {
+            get {
+                return ResourceManager.GetString("RenderGraphMessageBoxTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Render the simplified version skipping implied dependencies?.
+        /// </summary>
+        internal static string RenderSimplifiedDependencyGraphQuestion {
+            get {
+                return ResourceManager.GetString("RenderSimplifiedDependencyGraphQuestion", resourceCulture);
+            }
+        }
     }
 }

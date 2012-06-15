@@ -114,4 +114,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="DigraphCopiedToClipboard">
+    <value xml:space="preserve">The digraph code has been copied to your clipboard.</value>
+  </data>
+  <data name="DigraphCopiedToClipboardByGraphVizNotFound">
+    <value xml:space="preserve">GraphViz couldn't be found on your machine. The digraph code has been copied to your clipboard. You may go to http://graphviz-dev.appspot.com/ to render it there.</value>
+  </data>
+  <data name="LocateGraphVizQuetion">
+    <value xml:space="preserve">GraphViz wasn't found. Would you like to locate it?</value>
+  </data>
+  <data name="RenderSimplifiedDependencyGraphQuestion">
+    <value xml:space="preserve">Render the simplified version skipping implied dependencies?</value>
+  </data>
+  <data name="RenderGraphMessageBoxTitle">
+    <value xml:space="preserve">Dependency Graph</value>
+  </data>
+  <data name="LocateGraphViz">
+    <value xml:space="preserve">Select the folder containing 'dotty.exe' and 'dot.exe'. Usually in your Program Files under GraphViz bin.</value>
+  </data>
 </root>
