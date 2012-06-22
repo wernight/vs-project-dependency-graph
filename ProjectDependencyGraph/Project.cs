@@ -112,7 +112,7 @@ namespace ProjectDependencyGraph
             if (other == null)
                 return false;
 
-            if (Guid == other.Guid)
+            if (Guid != other.Guid)
                 return false;
 
             return true;
