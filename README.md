@@ -12,3 +12,9 @@ Major features:
   - Can hide indirect dependencies.
   - Graph distingishes libraries from WinApp and ConsoleApp assemblies.
   - Simple and open source so you can fix or customize it.
+
+
+Download
+--------
+
+http://download.beroux.com/vs-project-dependency-graph.exe
